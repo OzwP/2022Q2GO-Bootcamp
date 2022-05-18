@@ -33,6 +33,10 @@ func ReadId(c *fiber.Ctx) {
 		}
 	}
 
-	c.JSON(elements[id])
+	if id != "" {
+		c.JSON(elements[id])
+	} else {
+		c.JSON(elements)
+	}
 
 }

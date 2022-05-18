@@ -9,6 +9,7 @@ import (
 
 func setupRoutes(app *fiber.App) {
 	app.Get("/", routes.Index)
+	app.Get("/getId", routes.ReadId)
 	app.Get("/getId/:id", routes.ReadId)
 }
 
