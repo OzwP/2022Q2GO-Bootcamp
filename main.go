@@ -10,6 +10,7 @@ func setupRoutes(app *fiber.App) {
 	app.Get("/", routes.Index)
 	app.Get("/pokemons", routes.GetAll)
 	app.Get("/pokemons/:id", routes.GetById)
+	app.Get("/external", routes.GetExternal)
 }
 
 func main() {

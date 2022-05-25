@@ -2,9 +2,11 @@ package routes
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
-	_ "fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 
@@ -15,6 +17,16 @@ type pokemon struct {
 	Id    int    `json:"id"`
 	Name  string `json:"name"`
 	Power int    `json:"power"`
+}
+
+type apiResponse struct {
+	Count    int         `json:"count"`
+	Next     string      `json:"next"`
+	Previous interface{} `json:"previous"`
+	Results  []struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	} `json:"results"`
 }
 
 func readFile(fileName string) [][]string {
@@ -101,5 +113,38 @@ func GetById(c *fiber.Ctx) error {
 	} else {
 		return fiber.NewError(fiber.StatusNotFound, err.Error())
 	}
+	return nil
+}
+
+func GetExternal(c *fiber.Ctx) error {
+	resp, err := http.Get("https://pokeapi.co/api/v2/pokemon")
+	if err != nil {
+		err = fmt.Errorf("request failed %v", err)
+		log.Println(err)
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if resp.StatusCode != 200 {
+		err = fmt.Errorf("could not read from external api, status code: %v", resp.StatusCode)
+		log.Println(err)
+		return fiber.NewError(resp.StatusCode, err.Error())
+	}
+
+	defer resp.Body.Close()
+
+	respB, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		err = fmt.Errorf("error parsing response %v", err)
+		log.Println(err)
+		return err
+	}
+	data := apiResponse{}
+
+	if err := json.Unmarshal(respB, &data); err != nil {
+		err = fmt.Errorf("error converting response to JSON %v", err)
+		log.Println(err)
+		return err
+	}
+
+	c.JSON(data.Results)
+
 	return nil
 }
