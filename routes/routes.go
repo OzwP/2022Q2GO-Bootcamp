@@ -20,9 +20,9 @@ type pokemon struct {
 }
 
 type apiResponse struct {
-	Count    int         `json:"count"`
-	Next     string      `json:"next"`
-	Previous interface{} `json:"previous"`
+	Count    int      `json:"count"`
+	Next     string   `json:"next"`
+	Previous []string `json:"previous"`
 	Results  []struct {
 		Name string `json:"name"`
 		URL  string `json:"url"`
@@ -47,6 +47,49 @@ func readFile(fileName string) [][]string {
 	}
 
 	return data
+
+}
+
+func readGeneric(fileName string) map[string]map[string]string {
+
+	f, _ := os.Open(fileName)
+
+	defer f.Close()
+
+	csvReader := csv.NewReader(f)
+	data, _ := csvReader.ReadAll()
+
+	elements := make(map[string]map[string]string)
+	headers := data[0]
+
+	for _, element := range data[1:] {
+		elements[element[0]] = map[string]string{}
+		for i, header := range headers {
+			elements[element[0]][header] = element[i]
+		}
+	}
+
+	return elements
+
+}
+
+func makeFile(headers []string, data apiResponse) {
+
+	f, err := os.Create("returnedData.csv")
+
+	if err != nil {
+		log.Fatalf("failed creating file: %v", err)
+	}
+
+	defer f.Close()
+
+	csvwriter := csv.NewWriter(f)
+	csvwriter.Write(headers)
+	for _, e := range data.Results {
+		csvwriter.Write([]string{e.Name, e.URL})
+	}
+
+	csvwriter.Flush()
 
 }
 
@@ -87,7 +130,7 @@ func GetAll(c *fiber.Ctx) error {
 	pokemons, err := readData()
 	if err != nil {
 		log.Println(err)
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
 	c.JSON(pokemons)
@@ -144,7 +187,9 @@ func GetExternal(c *fiber.Ctx) error {
 		return err
 	}
 
-	c.JSON(data.Results)
+	makeFile([]string{"Name", "URL"}, data)
+
+	c.JSON(readGeneric("returnedData.csv"))
 
 	return nil
 }
