@@ -1,16 +1,15 @@
 package main
 
 import (
-	// "strconv"
 	"capstoneProyect/routes"
 
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 )
 
 func setupRoutes(app *fiber.App) {
 	app.Get("/", routes.Index)
-	app.Get("/getId", routes.ReadId)
-	app.Get("/getId/:id", routes.ReadId)
+	app.Get("/pokemons", routes.GetAll)
+	app.Get("/pokemons/:id", routes.GetById)
 }
 
 func main() {
@@ -18,5 +17,5 @@ func main() {
 
 	setupRoutes(app)
 
-	app.Listen(3000)
+	app.Listen("localhost:3000")
 }
