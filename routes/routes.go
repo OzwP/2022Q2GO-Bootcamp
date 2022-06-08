@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -73,18 +74,25 @@ func readGeneric(fileName string) map[string]map[string]string {
 
 }
 
-func makeFile(headers []string, data apiResponse) {
+func makeFile(data apiResponse) {
 
-	f, err := os.Create("returnedData.csv")
+	const fName = "returnedData.csv"
+
+	f, err := os.Create(fName)
 
 	if err != nil {
 		log.Fatalf("failed creating file: %v", err)
 	}
 
-	defer f.Close()
+	defer func() {
+		err := f.Close()
+		if err != nil {
+			log.Fatalf("failed closong file: %v", err)
+		}
+	}()
 
 	csvwriter := csv.NewWriter(f)
-	csvwriter.Write(headers)
+	csvwriter.Write([]string{"Name", "Url"})
 	for _, e := range data.Results {
 		csvwriter.Write([]string{e.Name, e.URL})
 	}
@@ -94,7 +102,9 @@ func makeFile(headers []string, data apiResponse) {
 }
 
 func readData() (map[int]pokemon, error) {
-	data := readFile("data.csv")
+	const fName = "data.csv"
+
+	data := readFile(fName)
 
 	elements := make(map[int]pokemon)
 
@@ -122,7 +132,8 @@ func readData() (map[int]pokemon, error) {
 }
 
 func Index(c *fiber.Ctx) error {
-	c.Send([]byte("Hello World"))
+	const helloMessage = "Hello World!"
+	c.Send([]byte(helloMessage))
 	return nil
 }
 
@@ -160,7 +171,14 @@ func GetById(c *fiber.Ctx) error {
 }
 
 func GetExternal(c *fiber.Ctx) error {
-	resp, err := http.Get("https://pokeapi.co/api/v2/pokemon")
+
+	const baseUrl = "pokeapi.co"
+	apiBase := "api/v2"
+	pokemonEndpoint := "pokemon"
+
+	endpointUrl := "https://" + path.Join(baseUrl, apiBase, pokemonEndpoint)
+
+	resp, err := http.Get(endpointUrl)
 	if err != nil {
 		err = fmt.Errorf("request failed %v", err)
 		log.Println(err)
@@ -187,9 +205,11 @@ func GetExternal(c *fiber.Ctx) error {
 		return err
 	}
 
-	makeFile([]string{"Name", "URL"}, data)
+	makeFile(data)
 
-	c.JSON(readGeneric("returnedData.csv"))
+	const fName = "returnedData.csv"
+
+	c.JSON(readGeneric(fName))
 
 	return nil
 }
