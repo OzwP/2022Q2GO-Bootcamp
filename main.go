@@ -11,6 +11,7 @@ func setupRoutes(app *fiber.App) {
 	app.Get("/pokemons", routes.GetAll)
 	app.Get("/pokemons/:id", routes.GetById)
 	app.Get("/external", routes.GetExternal)
+	app.Get("/workers", routes.WorkerRead)
 }
 
 func main() {

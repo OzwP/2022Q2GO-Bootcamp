@@ -14,6 +14,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+const notFoundMessage = "Item not found"
+
 type pokemon struct {
 	Id    int    `json:"id"`
 	Name  string `json:"name"`
@@ -102,7 +104,7 @@ func makeFile(data apiResponse) {
 }
 
 func readData() (map[int]pokemon, error) {
-	const fName = "data.csv"
+	const fName = "/Users/oswaldopacheco/go/wizelineAcademy/2022Q2GO-Bootcamp/data.csv"
 
 	data := readFile(fName)
 
@@ -159,13 +161,13 @@ func GetById(c *fiber.Ctx) error {
 	if err != nil {
 		err = fmt.Errorf("impossible to convert searchId to int: \" %v \" %v", c.Params("id"), err)
 		log.Println(err)
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		return fiber.NewError(fiber.StatusNotFound, notFoundMessage)
 	}
 
 	if p, ok := pokemons[searchId]; ok {
 		c.JSON(p)
 	} else {
-		return fiber.NewError(fiber.StatusNotFound, err.Error())
+		return fiber.NewError(fiber.StatusNotFound, notFoundMessage)
 	}
 	return nil
 }
@@ -210,6 +212,11 @@ func GetExternal(c *fiber.Ctx) error {
 	const fName = "returnedData.csv"
 
 	c.JSON(readGeneric(fName))
+
+	return nil
+}
+
+func WorkerRead(c *fiber.Ctx) error {
 
 	return nil
 }
