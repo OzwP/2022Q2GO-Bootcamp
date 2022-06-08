@@ -60,8 +60,7 @@ func TestGetAllRoute(t *testing.T) {
 }
 
 func TestGetIdRoute(t *testing.T) {
-	// Define a structure for specifying input and output data
-	// of a single test case
+
 	tests := []tests{
 		// First test case
 		{
