@@ -10,6 +10,8 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
+	"sync"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -35,7 +37,6 @@ type apiResponse struct {
 func readFile(fileName string) [][]string {
 
 	f, err := os.Open(fileName)
-
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,7 +45,6 @@ func readFile(fileName string) [][]string {
 
 	csvReader := csv.NewReader(f)
 	data, err := csvReader.ReadAll()
-
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -218,5 +218,80 @@ func GetExternal(c *fiber.Ctx) error {
 
 func WorkerRead(c *fiber.Ctx) error {
 
+	itemType := c.Query("type")
+
+	items, err1 := strconv.Atoi(c.Query("items", "0"))
+	if err1 != nil {
+		err1 = fmt.Errorf("number value expected %v", err1)
+		log.Println(err1)
+		return fiber.NewError(fiber.StatusNotFound, notFoundMessage)
+	}
+
+	items_per_workers, err2 := strconv.Atoi(c.Query("items_per_workers", "0"))
+	if err2 != nil {
+		err2 = fmt.Errorf("number value expected %v", err2)
+		log.Println(err2)
+		return fiber.NewError(fiber.StatusNotFound, notFoundMessage)
+	}
+
+	const fName = "/Users/oswaldopacheco/go/wizelineAcademy/2022Q2GO-Bootcamp/data.csv"
+	data := readFile(fName)
+
+	totalJobs := len(data)
+
+	jobs := make(chan []string, totalJobs)
+	results := make(chan []string, totalJobs)
+
+	var wg sync.WaitGroup
+
+	nWorkers := items / items_per_workers
+	wg.Add(nWorkers)
+	totalProcessed := 0
+	for w := 1; w <= nWorkers; w++ {
+		go worker(w, &wg, itemType, items_per_workers, items, &totalProcessed, jobs, results)
+	}
+
+	for j := 1; j < totalJobs; j++ {
+		jobs <- data[j]
+	}
+	close(jobs)
+
+	wg.Wait()
+
+	responseData := map[string][]string{}
+
+	for i := 0; i < items_per_workers; i++ {
+		resultData := <-results
+		responseData[resultData[0]] = resultData
+	}
+
+	c.JSON(responseData)
 	return nil
+}
+
+func worker(id int, wGroup *sync.WaitGroup, iType string, maxJobsPerWorker int, totalWanted int, totalProcessed *int, jobs <-chan []string, results chan<- []string) {
+
+	finishedJobs := 0
+
+	for row := range jobs {
+		// fmt.Printf("Worker %d started working on job number %d \n", id, finishedJobs)
+		rId, _ := strconv.Atoi(row[0])
+		if finishedJobs <= maxJobsPerWorker && *totalProcessed < totalWanted {
+
+			if strings.ToLower(iType) == "odd" && rId%2 != 0 {
+				finishedJobs += 1
+				results <- row
+				*totalProcessed += 1
+			} else if strings.ToLower(iType) == "even" && rId%2 == 0 {
+				finishedJobs += 1
+				results <- row
+				*totalProcessed += 1
+
+			}
+		} else {
+			break
+		}
+
+	}
+	wGroup.Done()
 }
