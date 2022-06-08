@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -171,14 +172,13 @@ func GetById(c *fiber.Ctx) error {
 
 func GetExternal(c *fiber.Ctx) error {
 
-	// const baseUrl = "https://pokeapi.co"
-	// apiBase := "api/v2"
-	// pokemonEndpoint := "pokemon"
+	const baseUrl = "pokeapi.co"
+	apiBase := "api/v2"
+	pokemonEndpoint := "pokemon"
 
-	// endpointUrl := path.Join(baseUrl, apiBase, pokemonEndpoint)
+	endpointUrl := "https://" + path.Join(baseUrl, apiBase, pokemonEndpoint)
 
-	resp, err := http.Get("https://pokeapi.co/api/v2/pokemon")
-	// resp, err := http.Get(endpointUrl)
+	resp, err := http.Get(endpointUrl)
 	if err != nil {
 		err = fmt.Errorf("request failed %v", err)
 		log.Println(err)
