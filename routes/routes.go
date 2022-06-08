@@ -260,7 +260,7 @@ func WorkerRead(c *fiber.Ctx) error {
 
 	responseData := map[string][]string{}
 
-	for i := 0; i < items_per_workers; i++ {
+	for i := 0; i < items; i++ {
 		resultData := <-results
 		responseData[resultData[0]] = resultData
 	}
@@ -271,21 +271,23 @@ func WorkerRead(c *fiber.Ctx) error {
 
 func worker(id int, wGroup *sync.WaitGroup, iType string, maxJobsPerWorker int, totalWanted int, totalProcessed *int, jobs <-chan []string, results chan<- []string) {
 
-	finishedJobs := 0
+	finishedJobs := 1
 
 	for row := range jobs {
-		// fmt.Printf("Worker %d started working on job number %d \n", id, finishedJobs)
-		rId, _ := strconv.Atoi(row[0])
-		if finishedJobs <= maxJobsPerWorker && *totalProcessed < totalWanted {
 
+		rId, _ := strconv.Atoi(row[0])
+		if finishedJobs <= maxJobsPerWorker {
+			fmt.Printf("\nWorker %d is working on job number %d", id, finishedJobs)
 			if strings.ToLower(iType) == "odd" && rId%2 != 0 {
 				finishedJobs += 1
 				results <- row
 				*totalProcessed += 1
+				fmt.Printf("\nWorker %d finished working on job number %d \n\n", id, finishedJobs-1)
 			} else if strings.ToLower(iType) == "even" && rId%2 == 0 {
 				finishedJobs += 1
 				results <- row
 				*totalProcessed += 1
+				fmt.Printf("\nWorker %d finished working on job number %d \n\n", id, finishedJobs-1)
 
 			}
 		} else {
@@ -293,5 +295,6 @@ func worker(id int, wGroup *sync.WaitGroup, iType string, maxJobsPerWorker int, 
 		}
 
 	}
+	fmt.Printf("\nWorker %d finished all jobs \n", id)
 	wGroup.Done()
 }
