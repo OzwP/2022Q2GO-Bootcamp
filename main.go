@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func setupRoutes(app *fiber.App) {
+func SetupRoutes(app *fiber.App) {
 	app.Get("/", routes.Index)
 	app.Get("/pokemons", routes.GetAll)
 	app.Get("/pokemons/:id", routes.GetById)
@@ -17,7 +17,7 @@ func setupRoutes(app *fiber.App) {
 func main() {
 	app := fiber.New()
 
-	setupRoutes(app)
+	SetupRoutes(app)
 
 	app.Listen("localhost:3000")
 }
