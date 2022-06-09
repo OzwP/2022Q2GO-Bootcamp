@@ -1,6 +1,7 @@
-package routes
+package router
 
 import (
+	"capstoneProyect/ports"
 	"net/http/httptest"
 	"testing"
 
@@ -28,7 +29,7 @@ func TestIndexRoute(t *testing.T) {
 	}
 
 	// route for test
-	app.Get("/", Index)
+	app.Get("/", ports.Index)
 
 	req := httptest.NewRequest("GET", test.route, nil)
 
@@ -48,7 +49,7 @@ func TestGetAllRoute(t *testing.T) {
 	}
 
 	// Create route with GET method for test
-	app.Get("/pokemons", GetAll)
+	app.Get("/pokemons", ports.GetAll)
 
 	req := httptest.NewRequest("GET", test.route, nil)
 
@@ -89,7 +90,7 @@ func TestGetIdRoute(t *testing.T) {
 	}
 
 	// Create route with GET method for test
-	app.Get("/pokemons/:id", GetById)
+	app.Get("/pokemons/:id", ports.GetById)
 
 	// Iterate through single test cases
 	for _, test := range tests {

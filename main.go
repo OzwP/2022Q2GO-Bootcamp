@@ -1,23 +1,15 @@
 package main
 
 import (
-	"capstoneProyect/routes"
+	"capstoneProyect/router"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func SetupRoutes(app *fiber.App) {
-	app.Get("/", routes.Index)
-	app.Get("/pokemons", routes.GetAll)
-	app.Get("/pokemons/:id", routes.GetById)
-	app.Get("/external", routes.GetExternal)
-	app.Get("/workers", routes.WorkerRead)
-}
-
 func main() {
 	app := fiber.New()
 
-	SetupRoutes(app)
+	router.SetupRoutes(app)
 
 	app.Listen("localhost:3000")
 }
